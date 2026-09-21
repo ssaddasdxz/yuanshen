@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>提瓦特档案馆 · Teyvat Archive</title>
+<link rel="preconnect" href="https://enka.network">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="./styles.css">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#d4af37">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="提瓦特档案馆">
+</head>
+<body data-theme="dark">
+<canvas class="starfield" id="starfield"></canvas>
+
+<div class="app">
+  <header class="header">
+    <button class="icon-btn menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
+    <div class="header-brand">
+      <div class="brand-mark"><i class="fas fa-crown"></i></div>
+      <div>
+        <div class="brand-name">提瓦特档案馆</div>
+        <div class="brand-sub">Teyvat Archive</div>
+      </div>
+    </div>
+    <div class="global-search">
+      <div class="search-input-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" id="globalSearch" placeholder="搜索角色、武器、阵容..." autocomplete="off">
+        <span class="search-kbd">/</span>
+      </div>
+      <div class="search-dropdown" id="searchDropdown"></div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="compareBtn" title="对比">
+        <i class="fas fa-balance-scale"></i>
+        <span class="badge" id="compareBadge" style="display:none;">0</span>
+      </button>
+      <button class="icon-btn" id="themeBtn" title="主题"><i class="fas fa-moon"></i></button>
+      <button class="icon-btn" id="langBtn" title="语言"><i class="fas fa-language"></i></button>
+    </div>
+  </header>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="nav-section">
+      <div class="nav-label">导航</div>
+      <div class="nav-item active" data-view="dashboard"><i class="fas fa-chart-pie"></i><span>数据总览</span></div>
+      <div class="nav-item" data-view="characters"><i class="fas fa-users"></i><span>角色图鉴</span><span class="nav-count" id="charCount">0</span></div>
+      <div class="nav-item" data-view="teams"><i class="fas fa-crown"></i><span>最强阵容</span><span class="nav-count" id="teamCount">0</span></div>
+      <div class="nav-item" data-view="weapons"><i class="fas fa-sword"></i><span>武器图鉴</span><span class="nav-count" id="weaponCount">0</span></div>
+      <div class="nav-item" data-view="artifacts"><i class="fas fa-gem"></i><span>圣遗物</span><span class="nav-count" id="artifactCount">0</span></div>
+      <div class="nav-item" data-view="gacha"><i class="fas fa-dice"></i><span>抽卡模拟</span></div>
+      <div class="nav-item" data-view="calculator"><i class="fas fa-calculator"></i><span>材料计算</span></div>
+      <div class="nav-item" data-view="editor"><i class="fas fa-edit"></i><span>配队编辑</span></div>
+      <div class="nav-item" data-view="compare"><i class="fas fa-balance-scale"></i><span>角色对比</span><span class="nav-count" id="compareCount">0</span></div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">进阶功能</div>
+      <div class="nav-item" data-view="abyss"><i class="fas fa-dungeon"></i><span>深渊推荐</span></div>
+      <div class="nav-item" data-view="tierlist"><i class="fas fa-trophy"></i><span>强度排行</span></div>
+      <div class="nav-item" data-view="calendar"><i class="fas fa-calendar-alt"></i><span>素材日历</span></div>
+      <div class="nav-item" data-view="talent"><i class="fas fa-book-open"></i><span>天赋计算</span></div>
+      <div class="nav-item" data-view="favorites"><i class="fas fa-heart"></i><span>我的收藏</span></div>
+      <div class="nav-item" data-view="achievements"><i class="fas fa-medal"></i><span>成就系统</span></div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">元素筛选</div>
+      <div class="element-grid" id="elementGrid">
+        <div class="element-chip" data-el="anemo" title="风"><i class="fas fa-wind"></i></div>
+        <div class="element-chip" data-el="geo" title="岩"><i class="fas fa-mountain"></i></div>
+        <div class="element-chip" data-el="electro" title="雷"><i class="fas fa-bolt"></i></div>
+        <div class="element-chip" data-el="dendro" title="草"><i class="fas fa-leaf"></i></div>
+        <div class="element-chip" data-el="hydro" title="水"><i class="fas fa-tint"></i></div>
+        <div class="element-chip" data-el="pyro" title="火"><i class="fas fa-fire"></i></div>
+        <div class="element-chip" data-el="cryo" title="冰"><i class="fas fa-snowflake"></i></div>
+        <div class="element-chip" data-el="all" title="全部"><i class="fas fa-globe"></i></div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <main class="main" id="main">
+    <section class="view active" id="view-dashboard">
+      <div class="page-header">
+        <div><div class="page-title"><i class="fas fa-chart-pie"></i> 数据总览</div><div class="page-desc">提瓦特全角色数据统计</div></div>
+      </div>
+      <div class="stats-grid" id="statsGrid"></div>
+      <div class="stats-grid">
+        <div class="stat-card" style="grid-column:span 2;">
+          <div class="stat-label"><i class="fas fa-fire"></i> 元素分布</div>
+          <div class="element-ring" id="elementRing"></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label"><i class="fas fa-map-marked-alt"></i> 地区分布</div>
+          <div class="region-bars" id="regionBars"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="view-characters">
+      <div class="page-header">
+        <div><div class="page-title"><i class="fas fa-users"></i> 角色图鉴</div><div class="page-desc" id="charPageDesc">共 0 位角色</div></div>
+        <div class="page-actions">
+          <button class="btn" id="sortBtn"><i class="fas fa-sort"></i> <span id="sortLabel">默认排序</span></button>
+          <button class="btn" id="resetFilterBtn"><i class="fas fa-redo"></i> 重置</button>
+        </div>
+      </div>
+      <div class="filters-bar">
+        <div class="filter-group">
+          <span class="filter-group-label">武器</span>
+          <button class="chip active" data-weapon="all">全部</button>
+          <button class="chip" data-weapon="单手剑">单手剑</button>
+          <button class="chip" data-weapon="双手剑">双手剑</button>
+          <button class="chip" data-weapon="长枪">长枪</button>
+          <button class="chip" data-weapon="弓">弓</button>
+          <button class="chip" data-weapon="法器">法器</button>
+        </div>
+        <div class="filter-group">
+          <span class="filter-group-label">星级</span>
+          <button class="chip active" data-rarity="all">全部</button>
+          <button class="chip" data-rarity="5">5★</button>
+          <button class="chip" data-rarity="4">4★</button>
+        </div>
+        <div class="filter-group">
+          <span class="filter-group-label">地区</span>
+          <button class="chip active" data-region="all">全部</button>
+          <button class="chip" data-region="蒙德">蒙德</button>
+          <button class="chip" data-region="璃月">璃月</button>
+          <button class="chip" data-region="稻妻">稻妻</button>
+          <button class="chip" data-region="须弥">须弥</button>
+          <button class="chip" data-region="纳塔">纳塔</button>
+        </div>
+      </div>
+      <div class="filter-summary" id="charFilterSummary">
+        <span class="filter-summary-label">当前筛选</span>
+        <span class="filter-summary-pill active">全部角色</span>
+      </div>
+      <div class="char-grid" id="charGrid"></div>
+    </section>
+
+    <section class="view" id="view-detail"></section>
+
+    <section class="view" id="view-teams">
+      <div class="page-header">
+        <div><div class="page-title"><i class="fas fa-crown"></i> 最强阵容</div><div class="page-desc">基于当前版本深渊环境整理的顶级配队</div></div>
+      </div>
+      <div class="team-grid" id="teamGrid"></div>
+    </section>
+
+    <section class="view" id="view-weapons">
+      <div class="page-header">
+        <div><div class="page-title"><i class="fas fa-sword"></i> 武器图鉴</div><div class="page-desc" id="weaponPageDesc">共 0 把武器</div></div>
+      </div>
+      <div class="filters-bar">
+        <div class="filter-group">
+          <span class="filter-group-label">类型</span>
+          <button class="chip active" data-wtype="all">全部</button>
+          <button class="chip" data-wtype="单手剑">单手剑</button>
+          <button class="chip" data-wtype="双手剑">双手剑</button>
+          <button class="chip" data-wtype="长枪">长枪</button>
+          <button class="chip" data-wtype="弓">弓</button>
+          <button class="chip" data-wtype="法器">法器</button>
+        </div>
+        <div class="filter-group">
+          <span class="filter-group-label">星级</span>
+          <button class="chip active" data-wstar="all">全部</button>
+          <button class="chip" data-wstar="5">5★</button>
+          <button class="chip" data-wstar="4">4★</button>
+          <button class="chip" data-wstar="3">3★</button>
+        </div>
+      </div>
+      <div class="weapon-grid" id="weaponGrid"></div>
+    </section>
+
+    <section class="view" id="view-artifacts">
+      <div class="page-header">
+        <div><div class="page-title"><i class="fas fa-gem"></i> 圣遗物图鉴</div><div class="page-desc" id="artifactPageDesc">共 0 套圣遗物</div></div>
+      </div>
+      <div class="weapon-grid" id="artifactGrid"></div>
+    </section>
+
+    <section class="view" id="view-gacha">
+      <div class="page-header">
+        <div><div class="page-title"><i class="fas fa-dice"></i> 抽卡模拟器</div><div class="page-desc">模拟角色 UP 池，验证你的欧非程度</div></div>
+        <div class="page-actions">
+          <button class="btn btn-danger" id="gachaReset"><i class="fas fa-redo"></i> 重置统计</button>
+        </div>
+      </div>
+      <div class="gacha-layout">
+        <div>
+          <div class="gacha-banner">
+            <div class="gacha-inner">
+              <div class="gacha-title">角色活动祈愿</div>
+              <div class="gacha-sub">限时 UP · 概率提升</div>
+              <div class="gacha-pool-tabs" role="tablist" aria-label="抽卡池类型">
+                <button class="gacha-pool-tab active" data-gacha-pool="character" role="tab">角色活动池</button>
+                <button class="gacha-pool-tab" data-gacha-pool="weapon" role="tab">武器活动池</button>
+              </div>
+              <div class="gacha-pool-note" id="gachaPoolNote">角色池：5★ 角色 · 4★ 角色</div>
+              <div class="gacha-buttons">
+                <button class="gacha-btn single" id="gachaSingle"><i class="fas fa-dice-one"></i> 单抽</button>
+                <button class="gacha-btn" id="gachaTen"><i class="fas fa-dice"></i> 十连抽</button>
+              </div>
+              <div style="margin-top:20px;font-size:12px;color:var(--text-3);">
+                保底：角色池 5★ 90 抽必出 · 武器池 5★ 80 抽必出 · 4★ 10 抽必出
+              </div>
+            </div>
+          </div>
+          <div class="gacha-results" id="gachaResults"></div>
+        </div>
+        <div>
+          <div class="gacha-stats">
+            <h3><i class="fas fa-chart-bar"></i> 抽卡统计</h3>
+            <div class="gacha-stat-row"><span class="label">总抽数</span><span class="value" id="statTotal">0</span></div>
+            <div class="gacha-stat-row"><span class="label">5★ 数量</span><span class="value" id="stat5">0</span></div>
+            <div class="gacha-stat-row"><span class="label">4★ 数量</span><span class="value" id="stat4">0</span></div>
+            <div class="gacha-stat-row"><span class="label">3★ 数量</span><span class="value" id="stat3">0</span></div>
+            <div class="gacha-stat-row"><span class="label">出金率</span><span class="value" id="statRate">0%</span></div>
+            <div class="gacha-stat-row"><span class="label">5★ 保底</span><span class="value" id="statPity5">0/90</span></div>
+            <div class="gacha-stat-row"><span class="label">4★ 保底</span><span class="value" id="statPity4">0/10</span></div>
+            <div class="gacha-stat-row"><span class="label">大保底</span><span class="value" id="statGuaranteed">否</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="view-calculator">
+      <div class="page-header">
+        <div><div class="page-title"><i class="fas fa-calculator"></i> 材料计算器</div><div class="page-desc">选择角色，自动汇总突破材料需求</div></div>
+        <div class="page-actions">
+          <button class="btn" id="calcClear"><i class="fas fa-times"></i> 清空</button>
+        </div>
+      </div>
+      <div class="material-calc-layout">
+        <div class="calc-picker">
+          <div class="calc-picker-title"><i class="fas fa-user-plus"></i> 选择角色</div>
+          <div class="calc-char-list" id="calcCharList"></div>
+        </div>
+        <div class="calc-summary">
+          <div class="calc-summary-title"><i class="fas fa-clipboard-list"></i> 材料汇总</div>
+          <div class="calc-summary-list" id="calcSummary"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="view-editor">
+      <div class="page-header">
+        <div><div class="page-title"><i class="fas fa-edit"></i> 配队编辑器</div><div class="page-desc">自定义 4 人阵容，保存到本地</div></div>
+      </div>
+      <div class="editor-layout">
+        <div class="editor-slots" id="editorSlots"></div>
+        <div class="editor-actions">
+          <button class="btn btn-ghost" id="editorReset"><i class="fas fa-redo"></i> 重置</button>
+          <button class="btn" id="editorRandom"><i class="fas fa-shuffle"></i> 随机配队</button>
+          <button class="btn btn-primary" id="editorSave"><i class="fas fa-save"></i> 保存配队</button>
+        </div>
+        <div class="editor-saved" id="editorSaved" style="display:none;">
+          <div class="editor-saved-title"><i class="fas fa-folder"></i> 已保存的配队</div>
+          <div class="editor-saved-list" id="editorSavedList"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="view-compare">
+      <div class="page-header">
+        <div><div class="page-title"><i class="fas fa-balance-scale"></i> 角色对比</div><div class="page-desc" id="compareDesc">选择角色进行横向对比（最多 4 位）</div></div>
+        <div class="page-actions"><button class="btn btn-danger" id="clearCompareBtn"><i class="fas fa-trash"></i> 清空</button></div>
+      </div>
+      <div class="compare-wrap" id="compareWrap"></div>
+    </section>
+
+    <section class="view" id="view-abyss">
+      <div class="page-header">
+        <div><div class="page-title"><i class="fas fa-dungeon"></i> 深渊阵容推荐</div><div class="page-desc">按层数与怪物类型推荐最优配队</div></div>
+      </div>
+      <div class="abyss-layout">
+        <div class="abyss-floor-tabs" id="abyssFloorTabs"></div>
+        <div id="abyssContent"></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-tierlist">
+      <div class="page-header">
+        <div><div class="page-title"><i class="fas fa-trophy"></i> 角色强度排行</div><div class="page-desc">基于深渊使用率与配队灵活度综合评级</div></div>
+      </div>
+      <div id="tierListContainer"></div>
+    </section>
+
+    <section class="view" id="view-calendar">
+      <div class="page-header">
+        <div><div class="page-title"><i class="fas fa-calendar-alt"></i> 每日素材日历</div><div class="page-desc">查看今日可刷取的天赋书与突破素材</div></div>
+      </div>
+      <div id="calendarContainer"></div>
+    </section>
+
+    <section class="view" id="view-talent">
+      <div class="page-header">
+        <div><div class="page-title"><i class="fas fa-book-open"></i> 天赋升级计算器</div><div class="page-desc">选择角色，汇总天赋升级所需的天赋书与摩拉</div></div>
+      </div>
+      <div id="talentCalcContainer"></div>
+    </section>
+
+    <section class="view" id="view-favorites">
+      <div class="page-header">
+        <div><div class="page-title"><i class="fas fa-heart"></i> 我的收藏</div><div class="page-desc" id="favoritesDesc">已收藏 0 位角色</div></div>
+        <div class="page-actions"><button class="btn" id="favClearBtn"><i class="fas fa-trash"></i> 清空收藏</button></div>
+      </div>
+      <div class="char-grid" id="favoritesGrid"></div>
+    </section>
+
+    <section class="view" id="view-achievements">
+      <div class="page-header">
+        <div><div class="page-title"><i class="fas fa-medal"></i> 成就系统</div><div class="page-desc" id="achDesc">记录你在提瓦特档案馆的探索里程碑</div></div>
+      </div>
+      <div class="ach-summary" id="achSummary"></div>
+      <div class="ach-grid" id="achGrid"></div>
+    </section>
+  </main>
+
+  <div class="floating-bar" id="floatingBar">
+    <button class="btn btn-ghost" id="floatReset"><i class="fas fa-undo-alt"></i> 返回全部</button>
+    <button class="btn btn-primary" id="floatCompare"><i class="fas fa-balance-scale"></i> 开始对比</button>
+  </div>
+
+  <div class="picker-overlay" id="pickerOverlay">
+    <div class="picker">
+      <div class="picker-title">
+        <span><i class="fas fa-user-plus"></i> 选择角色</span>
+        <button class="icon-btn" id="pickerClose"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="picker-grid" id="pickerGrid"></div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+</div>
+
+<script type="module" src="./app.js"></script>
+</body>
+</html>
